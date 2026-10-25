@@ -109,6 +109,49 @@ practice of land surveying, and a measurement from imagery is not a survey.
 That constraint is also the more useful product: a difference localised to one
 edge tells a surveyor exactly where to look.
 
+## Where the design came from
+
+The rules above are not preferences. Each traces to a measured result, and they
+are listed here so anyone can check the reasoning rather than take it on trust.
+
+**RRS-10K** — [arXiv 2607.24810](https://arxiv.org/abs/2607.24810). 43
+vision-language models and 9 segmentation models across 20 tasks on remote
+sensing imagery. The finding that shapes this library is the *shape* of the
+failure: coarse description scores 88 on average, while every quantitative or
+localised task collapses — visual grounding 4.67, distance 28.68, absolute
+position 30.05, area calculation 57.78. Referring segmentation across nine
+dedicated models averages 8.19 oIoU.
+
+That is why this library computes rather than infers. Area comes from counting
+pixels on an equal-area grid; position comes from the geotransform. None of it
+is asked of a model, because the benchmark says what happens when you ask.
+
+**GeoPix** — [arXiv 2501.06828](https://arxiv.org/abs/2501.06828). A pixel-level
+multimodal model for remote sensing. Its headline method is not used here, but
+three of its ablations are directly useful to anyone building a segmentation
+decoder for overhead imagery:
+
+- A class-wise memory of learned shape priors lifted mIoU from 76.56 to 84.25
+  (their table IX, at 64 slots per class; 256 gave no further gain).
+- Independent per-scale projectors beat a shared one by roughly 10 points
+  (table X) — a change that costs nothing.
+- **The gain concentrates on small objects**: +8.6 mIoU over the best
+  alternative on instances under 1% of image area, against +0.5 on large ones
+  (table III). For overhead agriculture that matters, because ditches, tracks
+  and treelines are all in the small bucket.
+
+**Fields of The World** — [arXiv 2409.16252](https://arxiv.org/abs/2409.16252).
+76,000 samples of agricultural field boundaries across 27 countries, open and
+standardised. Useful as a pretraining source, with the caveat that it is
+Sentinel-2 at 10 m — too coarse for features narrower than about 30 m.
+
+### Reading these yourself
+
+The one number worth internalising before building anything on overhead imagery
+is the gap between **4.67** and **~90**: the same models, asked to locate
+something in pixels versus asked to reason about positions given in text. If a
+position can be measured before the question is asked, measure it.
+
 ## Licence
 
 Apache-2.0.
